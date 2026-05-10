@@ -1,0 +1,5 @@
+fastapi[standard]>=0.115
+numpy>=1.26
+pillow>=10.0
+python-multipart>=0.0.9
+tritonclient[grpc,http]==2.37.0.9383150

@@ -1,0 +1,77 @@
+services:
+  artifact-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.artifacts
+    image: cuda-fastbev-artifact-builder:latest
+    gpus: all
+    environment:
+      FASTBEV_MODEL_NAME: ${FASTBEV_MODEL_NAME:-resnet18}
+      FASTBEV_PRECISION: ${FASTBEV_PRECISION:-fp16}
+      TRT_HARDWARE_COMPATIBILITY: ${TRT_HARDWARE_COMPATIBILITY:-ampere+}
+      TRT_FORCE_REBUILD: ${TRT_FORCE_REBUILD:-0}
+    volumes:
+      - ./model:/workspace/model
+      - ./example-data:/workspace/example-data:ro
+      - ./build:/workspace/build
+      - ./dependencies:/workspace/dependencies:ro
+      - ./libraries:/workspace/libraries:ro
+
+  modal-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile.modal-deploy
+    image: cuda-fastbev-modal-deploy:latest
+    depends_on:
+      artifact-builder:
+        condition: service_completed_successfully
+    environment:
+      FASTBEV_MODEL_NAME: ${FASTBEV_MODEL_NAME:-resnet18}
+      FASTBEV_PRECISION: ${FASTBEV_PRECISION:-fp16}
+      MODAL_VOLUME_NAME: ${MODAL_VOLUME_NAME:-fastbev-artifacts}
+      FASTBEV_MODAL_GPU: ${FASTBEV_MODAL_GPU:-A10}
+    secrets:
+      - modal_token_id
+      - modal_token_secret
+    volumes:
+      - ./model:/workspace/model:ro
+      - ./build:/workspace/build:ro
+      - ./models:/workspace/models:ro
+      - ./libraries:/workspace/libraries:ro
+
+  fastbev-local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cuda-fastbev-service:latest
+    container_name: cuda-fastbev-service
+    profiles:
+      - local
+    gpus: all
+    ports:
+      - "8080:8080"
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    environment:
+      FASTBEV_MODEL_NAME: ${FASTBEV_MODEL_NAME:-resnet18}
+      FASTBEV_PRECISION: ${FASTBEV_PRECISION:-fp16}
+      FASTBEV_MODEL_DIR: /workspace/model
+      FASTBEV_NATIVE_PYTHONPATH: /workspace/build
+      TRITON_MODEL_NAME: fastbev_pipeline
+      TRITON_URL: localhost:8001
+      TRITON_PROTOCOL: grpc
+    volumes:
+      - ./model:/workspace/model
+      - ./example-data:/workspace/example-data:ro
+      - ./build:/workspace/build
+      - ./models:/workspace/models:ro
+      - ./dependencies:/workspace/dependencies:ro
+      - ./libraries:/workspace/libraries:ro
+    shm_size: "2gb"
+
+secrets:
+  modal_token_id:
+    environment: MODAL_TOKEN_ID
+  modal_token_secret:
+    environment: MODAL_TOKEN_SECRET

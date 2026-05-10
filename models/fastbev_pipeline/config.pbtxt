@@ -1,0 +1,63 @@
+name: "fastbev_pipeline"
+backend: "python"
+max_batch_size: 0
+
+input [
+  {
+    name: "IMAGES"
+    data_type: TYPE_UINT8
+    dims: [ 6, 900, 1600, 3 ]
+  },
+  {
+    name: "VALID_C_IDX"
+    data_type: TYPE_FP32
+    dims: [ 6, 160000 ]
+  },
+  {
+    name: "VALID_X"
+    data_type: TYPE_INT64
+    dims: [ 6, 160000 ]
+  },
+  {
+    name: "VALID_Y"
+    data_type: TYPE_INT64
+    dims: [ 6, 160000 ]
+  }
+]
+
+output [
+  {
+    name: "BOXES"
+    data_type: TYPE_FP32
+    dims: [ -1, 8 ]
+  },
+  {
+    name: "LABELS"
+    data_type: TYPE_INT32
+    dims: [ -1 ]
+  }
+]
+
+instance_group [
+  {
+    count: 1
+    kind: KIND_CPU
+  }
+]
+
+parameters: {
+  key: "FORCE_CPU_ONLY_INPUT_TENSORS"
+  value: { string_value: "yes" }
+}
+parameters: {
+  key: "model_dir"
+  value: { string_value: "/models/artifacts/model" }
+}
+parameters: {
+  key: "model_name"
+  value: { string_value: "resnet18" }
+}
+parameters: {
+  key: "precision"
+  value: { string_value: "fp16" }
+}

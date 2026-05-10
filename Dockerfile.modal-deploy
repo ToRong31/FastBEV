@@ -1,0 +1,25 @@
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /workspace
+
+COPY modal_app.py /workspace/modal_app.py
+COPY modal_artifacts.py /workspace/modal_artifacts.py
+COPY CMakeLists.txt /workspace/CMakeLists.txt
+COPY src /workspace/src
+COPY tool /workspace/tool
+COPY models /workspace/models
+COPY service /workspace/service
+COPY examples /workspace/examples
+COPY docker /workspace/docker
+
+RUN python -m pip install --no-cache-dir \
+    modal \
+    numpy \
+    pillow \
+    requests \
+    && chmod +x /workspace/docker/modal_deploy.sh
+
+ENTRYPOINT ["/workspace/docker/modal_deploy.sh"]

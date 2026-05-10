@@ -1,7 +1,11 @@
 build/
+.env
+*.env
 data/
 model/
 example-data/
+__pycache__/
+**/__pycache__/
 ptq/qat/
 ptq/pth/
 ptq/__pycache__/

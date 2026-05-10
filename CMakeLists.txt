@@ -15,7 +15,7 @@ find_package(OpenCV)
 set(CMAKE_CXX_FLAGS_RELEASE "-std=c++14 -Wextra -Wall -Wno-missing-field-initializers -Wno-deprecated-declarations -O3 -DENABLE_TEXT_BACKEND_STB")
 set(CMAKE_CXX_FLAGS_DEBUG   "-std=c++14 -O0 -g -DENABLE_TEXT_BACKEND_STB")
 
-set(CUDA_NVCC_FLAGS_RELEASE "-Werror=all-warnings -Xcompiler -std=c++14,-Wextra,-Wall,-Wno-deprecated-declarations,-O3 -DENABLE_TEXT_BACKEND_STB")
+set(CUDA_NVCC_FLAGS_RELEASE "-std=c++14 -Xcompiler -Wextra,-Wall,-Wno-deprecated-declarations,-O3 -DENABLE_TEXT_BACKEND_STB")
 set(CUDA_NVCC_FLAGS_DEBUG   "-std=c++14 -O0 -g -DENABLE_TEXT_BACKEND_STB")
 
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} 
@@ -30,8 +30,8 @@ include_directories(
   # ${OpenCV_INCLUDE_DIRS}
   ../dependencies/stb
   ../dependencies/pybind11/include
+  /usr/include
   ../libraries/cuOSD/src
-  ../libraries/3DSparseConvolution/libspconv/include
   src/common
   src/
 )
@@ -39,7 +39,6 @@ include_directories(
 link_directories(
   $ENV{CUDA_Lib}
   $ENV{TensorRT_Lib}
-  ../libraries/3DSparseConvolution/libspconv/lib/${arch}
   build
   $ENV{Python_Lib}
 )
@@ -66,7 +65,6 @@ target_link_libraries(fastbev_core
   libcudart.so
   libcublasLt.so
   libnvinfer.so
-  libspconv.so
   ${Protobuf_LIBRARIES}
   libnvinfer_plugin.so
   ${OpenCV_LIBS}
@@ -83,7 +81,6 @@ cuda_add_executable(fastbev
 target_link_libraries(fastbev
   fastbev_core
   libnvinfer.so
-  libspconv.so
   ${Protobuf_LIBRARIES}
   libnvinfer_plugin.so
   ${OpenCV_LIBS}
@@ -91,16 +88,22 @@ target_link_libraries(fastbev
 #######################################################################
 
 
-########################## libpybev.so ################################
-if(${CMAKE_BUILD_PYTHON} STREQUAL "ON")
-  cuda_add_library(pybev SHARED
+########################## fastbev_native.so ###########################
+if(CMAKE_BUILD_PYTHON STREQUAL "ON")
+  cuda_add_library(fastbev_native SHARED
     src/python.cpp
   )
 
-  target_link_libraries(pybev
+  set_target_properties(fastbev_native PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "fastbev_native"
+    SUFFIX ".so"
+  )
+
+  target_link_libraries(fastbev_native
     fastbev_core
+    libcudart.so
     libnvinfer.so
-    libspconv.so
     ${Protobuf_LIBRARIES}
     libnvinfer_plugin.so
     $ENV{Python_Soname}

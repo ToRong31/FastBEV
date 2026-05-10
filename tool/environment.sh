@@ -1,24 +1,24 @@
 #!/bin/bash
 
-export TensorRT_Lib=/home/Mandy/code/TensorRT-8.6.1.6/lib
-export TensorRT_Inc=/home/Mandy/code/TensorRT-8.6.1.6/include
-export TensorRT_Bin=/home/Mandy/code/TensorRT-8.6.1.6/bin
+export TensorRT_Lib=${TensorRT_Lib:-/home/Mandy/code/TensorRT-8.6.1.6/lib}
+export TensorRT_Inc=${TensorRT_Inc:-/home/Mandy/code/TensorRT-8.6.1.6/include}
+export TensorRT_Bin=${TensorRT_Bin:-/home/Mandy/code/TensorRT-8.6.1.6/bin}
 
-export CUDA_Lib=/usr/local/cuda/lib64
-export CUDA_Inc=/usr/local/cuda/include
-export CUDA_Bin=/usr/local/cuda/bin
-export CUDA_HOME=/usr/local/cuda/
+export CUDA_Lib=${CUDA_Lib:-/usr/local/cuda/lib64}
+export CUDA_Inc=${CUDA_Inc:-/usr/local/cuda/include}
+export CUDA_Bin=${CUDA_Bin:-/usr/local/cuda/bin}
+export CUDA_HOME=${CUDA_HOME:-/usr/local/cuda/}
 
-export CUDNN_Lib=/usr/local/cuda/lib64
+export CUDNN_Lib=${CUDNN_Lib:-/usr/local/cuda/lib64}
 
 
 # resnet50/resnet50int8/swint
-export DEBUG_MODEL=resnet18int8
+export DEBUG_MODEL=${DEBUG_MODEL:-resnet18int8}
 
 # fp16/int8
-export DEBUG_PRECISION=int8
-export DEBUG_DATA=example-data
-export USE_Python=OFF
+export DEBUG_PRECISION=${DEBUG_PRECISION:-int8}
+export DEBUG_DATA=${DEBUG_DATA:-example-data}
+export USE_Python=${USE_Python:-OFF}
 
 # check the configuration path
 # clean the configuration status
@@ -60,12 +60,12 @@ export LD_LIBRARY_PATH=$TensorRT_Lib:$CUDA_Lib:$CUDNN_Lib:$BuildDirectory:$LD_LI
 export PYTHONPATH=$BuildDirectory:$PYTHONPATH
 export ConfigurationStatus=Success
 
-if [ -f "tool/cudasm.sh" ]; then
+if [ -z "$CUDASM" ] && [ -f "tool/cudasm.sh" ]; then
     echo "Try to get the current device SM"
     . "tool/cudasm.sh"
     echo "Current CUDA SM: $cudasm"
 fi
 
-export CUDASM=$cudasm
+export CUDASM=${CUDASM:-$cudasm}
 
 echo Configuration done!
